@@ -7,6 +7,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Controller
 public class OrcamentoController {
 
@@ -14,32 +17,57 @@ public class OrcamentoController {
     private OrcamentoRepository repository;
 
     @GetMapping("/orcamento")
-    public String formulario(Model model) {
-        model.addAttribute("orcamento", new Orcamento());
-        return "formulario";
+    public String novoOrcamento(Model model) {
+        Orcamento orcamento = new Orcamento();
+        orcamento.getItens().add(new ItemOrcamento());
+        model.addAttribute("orcamento", orcamento);
+        return "form-orcamento";
     }
 
     @PostMapping("/salvar")
-    public String salvar(Orcamento orcamento, Model model) {
-        repository.save(orcamento);
-        model.addAttribute("orcamento", orcamento);
-        return "resultado";
+    public String salvar(Orcamento orcamento) {
+        try {
+            // Proteção contra data nula
+            if (orcamento.getDataCriacao() == null) {
+                orcamento.setDataCriacao(LocalDateTime.now());
+            }
+
+            // Limpeza de itens vazios
+            if (orcamento.getItens() != null) {
+                orcamento.getItens().removeIf(item -> item.getDescricao() == null || item.getDescricao().trim().isEmpty());
+            }
+
+            orcamento.calcularTotal();
+            repository.save(orcamento);
+            return "redirect:/lista";
+
+        } catch (Exception e) {
+            System.err.println("==== ERRO CRÍTICO AO SALVAR ====");
+            e.printStackTrace();
+            return "redirect:/orcamento?erro";
+        }
     }
 
     @GetMapping("/lista")
-    public String listar(Model model) {
-        model.addAttribute("orcamentos", repository.findAll());
-        return "lista";
+    public String listarOrcamentos(Model model) {
+        List<Orcamento> orcamentos = repository.findAll();
+        model.addAttribute("orcamentos", orcamentos);
+        return "lista-orcamentos";
     }
 
-    // Método para excluir um orçamento pelo ID
     @GetMapping("/excluir/{id}")
-    public String excluir(@PathVariable("id") Long id) {
+    public String excluir(@PathVariable Long id) {
         repository.deleteById(id);
-        return "redirect:/lista"; // Redireciona de volta para a lista atualizada
+        return "redirect:/lista";
     }
 
-    // Método para abrir a tela de login
+    @GetMapping("/imprimir/{id}")
+    public String imprimir(@PathVariable Long id, Model model) {
+        Orcamento orcamento = repository.findById(id).orElse(new Orcamento());
+        model.addAttribute("orcamento", orcamento);
+        return "imprimir-orcamento";
+    }
+
     @GetMapping("/login")
     public String login() {
         return "login";
