@@ -4,35 +4,153 @@
     <meta charset="UTF-8">
     <title>Oficina - Novo Orçamento</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body class="bg-light">
-<div class="container mt-5">
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white">
-            <h2 class="mb-0">Sistema de Orçamentos - Oficina</h2>
+<div class="container mt-4 mb-5">
+    <div class="card shadow border-0">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Gerar Novo Orçamento</h4>
+            <a href="/lista" class="btn btn-secondary btn-sm">Voltar para a Lista</a>
         </div>
-        <div class="card-body">
+        <div class="card-body p-4">
             <form th:action="@{/salvar}" th:object="${orcamento}" method="post">
-                <div class="mb-3">
-                    <label class="form-label">Nome do Cliente</label>
-                    <input type="text" class="form-control" th:field="*{cliente}" placeholder="Ex: João Silva">
+
+                <h5 class="text-primary border-bottom pb-2 mb-3"><i class="bi bi-person-vcard"></i> Dados Gerais</h5>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-bold">Nº do Pedido</label>
+                        <input type="text" class="form-control bg-light" th:field="*{numeroPedido}" placeholder="Ex: OS-1001">
+                    </div>
+                    <div class="col-md-9 mb-3">
+                        <label class="form-label fw-bold">Nome do Cliente</label>
+                        <input type="text" class="form-control" th:field="*{cliente}" placeholder="Ex: João Silva" required>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Veículo</label>
-                    <input type="text" class="form-control" th:field="*{veiculo}" placeholder="Ex: Gol Quadrado">
+                <div class="row">
+                    <div class="col-md-5 mb-3">
+                        <label class="form-label fw-bold">Modelo do Carro</label>
+                        <input type="text" class="form-control" th:field="*{veiculo}" placeholder="Ex: Gol Quadrado 1.6" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">Placa</label>
+                        <input type="text" class="form-control text-uppercase" th:field="*{placa}" placeholder="Ex: ABC-1234">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-bold">KM Recebida</label>
+                        <input type="text" class="form-control" th:field="*{kmRecebida}" placeholder="Ex: 85000">
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Descrição do Serviço</label>
-                    <textarea class="form-control" rows="3" th:field="*{descricao}"></textarea>
+
+                <h5 class="text-primary border-bottom pb-2 mt-4 mb-3"><i class="bi bi-tools"></i> Serviços e Peças</h5>
+
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Descrição (Peça/Serviço)</th>
+                        <th style="width: 120px;">Qtd</th>
+                        <th style="width: 150px;">Valor Un. (R$)</th>
+                        <th style="width: 150px;">Subtotal (R$)</th>
+                        <th style="width: 60px;" class="text-center">Ação</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tabelaItens">
+                    <tr>
+                        <td>
+                            <input type="text" th:field="*{itens[0].descricao}" class="form-control" placeholder="Descreva o item" required>
+                        </td>
+                        <td>
+                            <input type="number" th:field="*{itens[0].quantidade}" class="form-control qtd" value="1" min="1" oninput="calcularLinha(this)">
+                        </td>
+                        <td>
+                            <input type="number" step="0.01" th:field="*{itens[0].valorUnitario}" class="form-control valor" value="0.00" oninput="calcularLinha(this)" required>
+                        </td>
+                        <td>
+                            <input type="text" class="form-control total-linha text-end fw-bold bg-white" value="0.00" readonly>
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-outline-danger btn-sm" disabled><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="adicionarLinha()">
+                        <i class="bi bi-plus-circle"></i> Adicionar Nova Linha
+                    </button>
+
+                    <h3 class="text-success mb-0">Total: R$ <span id="displayTotal">0,00</span></h3>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Valor Total (R$)</label>
-                    <input type="number" step="0.01" class="form-control" th:field="*{valor}">
-                </div>
-                <button type="submit" class="btn btn-success w-100">Gerar Orçamento Profissional</button>
+
+                <hr class="mt-4 mb-4">
+                <button type="submit" class="btn btn-success w-100 py-3 fw-bold fs-5">
+                    <i class="bi bi-check-circle"></i> Salvar Orçamento Final
+                </button>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+    // Começa no 1 porque a linha 0 já existe no HTML acima
+    let itemIndex = 1;
+
+    // Função para adicionar uma nova linha na tabela
+    function adicionarLinha() {
+        const tbody = document.getElementById('tabelaItens');
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+            <td>
+                <input type="text" name="itens[${itemIndex}].descricao" class="form-control" placeholder="Descreva o item" required>
+            </td>
+            <td>
+                <input type="number" name="itens[${itemIndex}].quantidade" class="form-control qtd" value="1" min="1" oninput="calcularLinha(this)">
+            </td>
+            <td>
+                <input type="number" step="0.01" name="itens[${itemIndex}].valorUnitario" class="form-control valor" value="0.00" oninput="calcularLinha(this)" required>
+            </td>
+            <td>
+                <input type="text" class="form-control total-linha text-end fw-bold bg-white" value="0.00" readonly>
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-danger btn-sm" onclick="removerLinha(this)"><i class="bi bi-trash"></i></button>
+            </td>
+        `;
+
+        tbody.appendChild(tr);
+        itemIndex++;
+    }
+
+    // Função para remover a linha clicada
+    function removerLinha(botao) {
+        botao.closest('tr').remove();
+        calcularTotalGeral(); // Recalcula o total grandão após remover
+    }
+
+    // Função que calcula Qtd * Valor da linha específica
+    function calcularLinha(input) {
+        const tr = input.closest('tr'); // Pega a linha atual
+        const qtd = parseFloat(tr.querySelector('.qtd').value) || 0;
+        const valor = parseFloat(tr.querySelector('.valor').value) || 0;
+
+        const subtotal = qtd * valor;
+        tr.querySelector('.total-linha').value = subtotal.toFixed(2); // Atualiza o visual
+
+        calcularTotalGeral(); // Chama a atualização do total grandão
+    }
+
+    // Função que varre todas as linhas e soma o valor final
+    function calcularTotalGeral() {
+        let total = 0;
+        document.querySelectorAll('.total-linha').forEach(input => {
+            total += parseFloat(input.value) || 0;
+        });
+
+        // Atualiza o texto grande verde no final do formulário
+        document.getElementById('displayTotal').innerText = total.toFixed(2).replace('.', ',');
+    }
+</script>
 </body>
 </html>

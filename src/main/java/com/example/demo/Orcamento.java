@@ -12,6 +12,11 @@ public class Orcamento {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // --- NOVOS CAMPOS ADICIONADOS ---
+    private String numeroPedido;
+    private String kmRecebida;
+
+    // --- CAMPOS EXISTENTES ---
     private String cliente;
     private String veiculo;
     private String placa;
@@ -39,22 +44,37 @@ public class Orcamento {
     // Getters e Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
+    public String getNumeroPedido() { return numeroPedido; }
+    public void setNumeroPedido(String numeroPedido) { this.numeroPedido = numeroPedido; }
+
+    public String getKmRecebida() { return kmRecebida; }
+    public void setKmRecebida(String kmRecebida) { this.kmRecebida = kmRecebida; }
+
     public String getCliente() { return cliente; }
     public void setCliente(String cliente) { this.cliente = cliente; }
+
     public String getVeiculo() { return veiculo; }
     public void setVeiculo(String veiculo) { this.veiculo = veiculo; }
+
     public String getPlaca() { return placa; }
     public void setPlaca(String placa) { this.placa = placa; }
+
     public String getTelefone() { return telefone; }
     public void setTelefone(String telefone) { this.telefone = telefone; }
+
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
     public String getDescricaoProblema() { return descricaoProblema; }
     public void setDescricaoProblema(String descricaoProblema) { this.descricaoProblema = descricaoProblema; }
+
     public LocalDateTime getDataCriacao() { return dataCriacao; }
     public void setDataCriacao(LocalDateTime dataCriacao) { this.dataCriacao = dataCriacao; }
+
     public Double getValorTotal() { return valorTotal == null ? 0.0 : valorTotal; }
     public void setValorTotal(Double valorTotal) { this.valorTotal = valorTotal; }
+
     public List<ItemOrcamento> getItens() { return itens; }
     public void setItens(List<ItemOrcamento> itens) { this.itens = itens; }
 }

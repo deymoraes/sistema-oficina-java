@@ -19,20 +19,19 @@ public class OrcamentoController {
     @GetMapping("/orcamento")
     public String novoOrcamento(Model model) {
         Orcamento orcamento = new Orcamento();
-        orcamento.getItens().add(new ItemOrcamento());
+        orcamento.getItens().add(new ItemOrcamento()); // Prepara o espaço para a tela
         model.addAttribute("orcamento", orcamento);
-        return "form-orcamento";
+        return "formulario";
     }
 
     @PostMapping("/salvar")
     public String salvar(Orcamento orcamento) {
         try {
-            // Proteção contra data nula
             if (orcamento.getDataCriacao() == null) {
                 orcamento.setDataCriacao(LocalDateTime.now());
             }
 
-            // Limpeza de itens vazios
+            // Remove o item se o usuário não preencheu nada nele
             if (orcamento.getItens() != null) {
                 orcamento.getItens().removeIf(item -> item.getDescricao() == null || item.getDescricao().trim().isEmpty());
             }
@@ -42,7 +41,6 @@ public class OrcamentoController {
             return "redirect:/lista";
 
         } catch (Exception e) {
-            System.err.println("==== ERRO CRÍTICO AO SALVAR ====");
             e.printStackTrace();
             return "redirect:/orcamento?erro";
         }
@@ -52,7 +50,7 @@ public class OrcamentoController {
     public String listarOrcamentos(Model model) {
         List<Orcamento> orcamentos = repository.findAll();
         model.addAttribute("orcamentos", orcamentos);
-        return "lista-orcamentos";
+        return "lista";
     }
 
     @GetMapping("/excluir/{id}")
